@@ -3,8 +3,9 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { GetAllUsers, GetCurrentUser } from "../apicalls/users";
+import { GetAllChats } from "../apicalls/chats";
 import { ShowLoader, HideLoader } from "../redux/loaderSlice";
-import { setUser, setAllUsers } from "../redux/userSlice";
+import { setUser, setAllUsers, setAllChats } from "../redux/userSlice";
 import logo from "../images/logo.png";
 
 const ProtectedRoute = ({ children }) => {
@@ -17,10 +18,12 @@ const ProtectedRoute = ({ children }) => {
       dispatch(ShowLoader());
       const response = await GetCurrentUser();
       const allUsersResponse = await GetAllUsers();
+      const allChatsResponse = await GetAllChats();
       dispatch(HideLoader());
       if (response.success) {
         dispatch(setUser(response.data));
         dispatch(setAllUsers(allUsersResponse.data));
+        dispatch(setAllChats(allChatsResponse.data));
       } else {
         toast.error(response.message);
       }
