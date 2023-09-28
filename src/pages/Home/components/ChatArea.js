@@ -1,11 +1,36 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { SendMessage } from "../../../apicalls/messages";
+import { ShowLoader, HideLoader } from "../../../redux/loaderSlice";
 
 const ChatArea = () => {
+  const dispatch = useDispatch();
+  const [newMessage, setNewMessage] = useState("");
   const { selectedChat, user } = useSelector((state) => state.userReducer);
   const receipentUser = selectedChat.members.find(
     (member) => member._id !== user._id
   );
+
+  const sendNewMessage = async () => {
+    try {
+      dispatch(ShowLoader());
+      const message = {
+        chat: selectedChat._id,
+        sender: user._id,
+        text: newMessage,
+      };
+      const response = await SendMessage(message);
+      dispatch(HideLoader());
+
+      if (response.success) {
+        setNewMessage("");
+      }
+    } catch (error) {
+      dispatch(HideLoader());
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="bg-white h-[87vh] border rounded-2xl w-full flex flex-col justify-between p-5">
@@ -39,9 +64,14 @@ const ChatArea = () => {
             type="text"
             placeholder="type a message"
             className="w-[90%] border-0 h-full rounded-[6px] focus:outline-none"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
           />
-          <button className="bg-primary text-white h-[60px] overflow-hidden py-2 px-5 rounded-r-lg">
-            SEND
+          <button
+            onClick={sendNewMessage}
+            className="bg-primary h-[60px] overflow-hidden py-2 px-5 rounded-r-lg flex items-center text-white font-semibold"
+          >
+            <i class="fa-solid fa-play text-xl"></i>
           </button>
         </div>
       </div>
