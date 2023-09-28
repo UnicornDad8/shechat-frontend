@@ -6,7 +6,7 @@ const UserSearch = ({ searchKey, setSearchKey }) => {
       <input
         type="text"
         placeholder="Search user or chat"
-        className="w-full pl-10 text-gray-500"
+        className="w-full h-[45px] pl-10 text-gray-500 rounded-3xl focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
         value={searchKey}
         onChange={(e) => setSearchKey(e.target.value)}
       />
