@@ -67,12 +67,14 @@ const Login = () => {
           value={user.email}
           onChange={(e) => setUser({ ...user, email: e.target.value })}
           placeholder="Email"
+          className="h-[45px]"
         />
         <input
           type="password"
           value={user.password}
           onChange={(e) => setUser({ ...user, password: e.target.value })}
           placeholder="Password"
+          className="h-[45px]"
         />
         <button className="contained-btn" onClick={login}>
           Login

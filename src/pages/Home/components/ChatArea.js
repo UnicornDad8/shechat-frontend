@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import toast from "react-hot-toast";
+import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
 import { SendMessage } from "../../../apicalls/messages";
 import { ShowLoader, HideLoader } from "../../../redux/loaderSlice";
+import { GetMessages } from "../../../apicalls/messages";
 
 const ChatArea = () => {
   const dispatch = useDispatch();
   const [newMessage, setNewMessage] = useState("");
   const { selectedChat, user } = useSelector((state) => state.userReducer);
+  const [messages = [], setMessages] = useState([]);
   const receipentUser = selectedChat.members.find(
     (member) => member._id !== user._id
   );
@@ -32,9 +35,27 @@ const ChatArea = () => {
     }
   };
 
+  const getMessages = useCallback(async () => {
+    try {
+      dispatch(ShowLoader());
+      const response = await GetMessages(selectedChat._id);
+      dispatch(HideLoader());
+
+      if (response.success) {
+        setMessages(response.data);
+      }
+    } catch (error) {
+      dispatch(HideLoader());
+      toast.error(error.message);
+    }
+  }, [dispatch, selectedChat._id]);
+
+  useEffect(() => {
+    getMessages();
+  }, [getMessages]);
+
   return (
     <div className="bg-white h-[87vh] border rounded-2xl w-full flex flex-col justify-between p-5">
-      {/* receipents users */}
       <div>
         <div className="flex gap-5 items-center mb-2">
           {receipentUser?.profilePic && (
@@ -55,9 +76,35 @@ const ChatArea = () => {
         </div>
         <hr />
       </div>
-      {/* chat messages */}
-      <div>chat messages</div>
-      {/* chat input */}
+      <div className="h-[66vh] overflow-y-scroll pr-5">
+        <div className="flex flex-col gep-2">
+          {messages.map((message) => {
+            const isCurrentUserIsSender = message.sender === user._id;
+
+            return (
+              <div
+                key={message._id}
+                className={`flex ${isCurrentUserIsSender && "justify-end"}`}
+              >
+                <div className="flex flex-col">
+                  <h2
+                    className={`${
+                      isCurrentUserIsSender
+                        ? "bg-primary text-white rounded-bl-none"
+                        : "bg-gray-300 text-gray-800 rounded-tr-none"
+                    } py-3 px-5 rounded-xl`}
+                  >
+                    {message.text}
+                  </h2>
+                  <h2 className="mt-1 mb-4 ml-[3px] text-gray-500 text-sm">
+                    {moment(message.createdAt).format("hh:mm A")}
+                  </h2>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
       <div>
         <div className="h-[60px] border border-gray-300 flex justify-between items-center rounded-lg">
           <input
@@ -71,7 +118,7 @@ const ChatArea = () => {
             onClick={sendNewMessage}
             className="bg-primary h-[60px] overflow-hidden py-2 px-5 rounded-r-lg flex items-center text-white font-semibold"
           >
-            <i class="fa-solid fa-play text-xl"></i>
+            <i className="fa-solid fa-play text-xl"></i>
           </button>
         </div>
       </div>
