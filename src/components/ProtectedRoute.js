@@ -64,7 +64,7 @@ const ProtectedRoute = ({ children }) => {
         </div>
       </div>
 
-      <div className="p-5">{children}</div>
+      <div className="p-2">{children}</div>
     </div>
   );
 };

@@ -83,17 +83,17 @@ const ChatArea = () => {
       clearUnreadMessages();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getMessages]);
+  }, [selectedChat]);
 
   return (
-    <div className="bg-white h-[87vh] border rounded-2xl w-full flex flex-col justify-between p-5">
+    <div className="bg-white h-full border rounded-2xl w-full flex flex-col justify-between p-5">
       <div>
         <div className="flex gap-5 items-center mb-2">
           {receipentUser?.profilePic && (
             <img
               src={receipentUser?.profilePic}
               alt="User Profile"
-              className="w-10 h-10 rounded-full"
+              className="w-12 h-10 rounded-full"
             />
           )}
           {!receipentUser?.profilePic && (
@@ -107,43 +107,45 @@ const ChatArea = () => {
         </div>
         <hr />
       </div>
-      <div className="h-[66vh] overflow-y-scroll pr-5">
-        <div className="flex flex-col gep-2">
-          {messages.map((message) => {
-            const isCurrentUserIsSender = message.sender === user._id;
+      <div className="h-[67vh] flex items-center py-3">
+        <div className="h-full w-full overflow-y-scroll">
+          <div className="flex flex-col gap-2">
+            {messages.map((message) => {
+              const isCurrentUserIsSender = message.sender === user._id;
 
-            return (
-              <div
-                key={message._id}
-                className={`flex ${isCurrentUserIsSender && "justify-end"}`}
-              >
-                <div className="flex flex-col">
-                  <h2
-                    className={`${
-                      isCurrentUserIsSender
-                        ? "bg-primary text-white rounded-bl-none"
-                        : "bg-gray-300 text-gray-800 rounded-tr-none"
-                    } py-3 px-5 rounded-xl`}
-                  >
-                    {message.text}
-                  </h2>
-                  <h2 className="mt-1 mb-4 ml-[3px] text-gray-500 text-sm">
-                    {moment(message.createdAt).format("hh:mm A")}
-                  </h2>
+              return (
+                <div
+                  key={message._id}
+                  className={`flex ${isCurrentUserIsSender && "justify-end"}`}
+                >
+                  <div className="flex flex-col">
+                    <h2
+                      className={`${
+                        isCurrentUserIsSender
+                          ? "bg-primary text-white rounded-bl-none"
+                          : "bg-gray-300 text-gray-800 rounded-tr-none"
+                      } py-3 px-5 rounded-xl`}
+                    >
+                      {message.text}
+                    </h2>
+                    <h2 className="mt-1 mb-4 ml-[3px] text-gray-500 text-sm">
+                      {moment(message.createdAt).format("hh:mm A")}
+                    </h2>
+                  </div>
+                  {isCurrentUserIsSender && (
+                    <i
+                      className={`fa-solid fa-check text-lg p-1 ${
+                        message.read ? "text-green-600" : "text-gray-400"
+                      }`}
+                    ></i>
+                  )}
                 </div>
-                {isCurrentUserIsSender && (
-                  <i
-                    className={`fa-solid fa-check text-lg p-1 ${
-                      message.read ? "text-green-600" : "text-gray-400"
-                    }`}
-                  ></i>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
-      <div>
+      <div className="bg-white">
         <div className="h-[60px] border border-gray-300 flex justify-between items-center rounded-lg">
           <input
             type="text"

@@ -9,12 +9,14 @@ const Home = () => {
   const { selectedChat } = useSelector((state) => state.userReducer);
 
   return (
-    <div className="flex gap-5">
+    <div className="flex gap-2">
       <div className="w-96">
         <UserSearch searchKey={searchKey} setSearchKey={setSearchKey} />
         <UsersList searchKey={searchKey} />
       </div>
-      <div className="w-full">{selectedChat && <ChatArea />}</div>
+      <div className="w-full flex items-center justify-center">
+        {selectedChat && <ChatArea />}
+      </div>
     </div>
   );
 };

@@ -15,11 +15,11 @@ const UsersList = ({ searchKey }) => {
   const createNewChat = async (receipentUserId) => {
     try {
       dispatch(ShowLoader());
-      const response = await CreateNewChat([user._id, receipentUserId]);
+      const response = await CreateNewChat([user?._id, receipentUserId]);
       dispatch(HideLoader());
       if (response.success) {
         toast.success(response.message);
-        const newChat = response.data;
+        const newChat = response?.data;
         const updatedChats = [...allChats, newChat];
         dispatch(setAllChats(updatedChats));
         dispatch(setSelectedChat(newChat));
@@ -45,13 +45,13 @@ const UsersList = ({ searchKey }) => {
   };
 
   const getData = () => {
-    return allUsers.filter(
-      (userObj) =>
-        (userObj?.name?.toLowerCase().includes(searchKey?.toLowerCase()) &&
-          searchKey) ||
-        allChats.some((chat) =>
-          chat.members.map((member) => member._id).includes(userObj._id)
-        )
+    // if searchKey is empty return all chats, else return filtered chats and users
+    if (searchKey === "") {
+      return allChats;
+    }
+
+    return allUsers.filter((user) =>
+      user.name.toLowerCase().includes(searchKey.toLowerCase())
     );
   };
 
@@ -103,32 +103,43 @@ const UsersList = ({ searchKey }) => {
 
   return (
     <div className="flex flex-col gap-3 mt-5 w-96">
-      {getData().map((userObj) => {
+      {getData().map((chatObjOrUserObj) => {
+        let userObj = chatObjOrUserObj;
+
+        if (chatObjOrUserObj.members) {
+          userObj = chatObjOrUserObj.members.find(
+            (member) => member._id !== user._id
+          );
+        }
+
         return (
           <div
             key={userObj._id}
-            className={`shadow-sm border p-3 rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full ${
+            className={`shadow-sm border rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full ${
               getIsSelectedChatOrNot(userObj) && "border-primary border-2"
             }`}
             onClick={() => openChat(userObj._id)}
           >
-            <div className="flex items-center w-full">
-              {userObj?.profilePic && (
-                <img
-                  src={userObj?.profilePic}
-                  alt="User Profile"
-                  className="w-11 h-10 rounded-full mr-2"
-                />
-              )}
-              {!userObj?.profilePic && (
-                <div className="bg-gray-500 w-11 h-10 rounded-full flex items-center justify-center mr-2">
-                  <h2 className="uppercase text-white text-2xl font-semibold">
-                    {userObj?.name[0]}
-                  </h2>
-                </div>
-              )}
-              <div className="flex flex-col gap-1 w-full">
-                <div className="flex gap-1 justify-between">
+            <div className="flex justify-center items-center w-full m-2">
+              <div className="w-14 h-12 bg-white flex items-center justify-center">
+                {userObj?.profilePic && (
+                  <img
+                    src={userObj?.profilePic}
+                    alt="User Profile"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                )}
+                {!userObj?.profilePic && (
+                  <div className="bg-gray-500 w-full h-full object-cover rounded-full flex items-center justify-center">
+                    <h2 className="uppercase text-white text-2xl font-semibold">
+                      {userObj?.name[0]}
+                    </h2>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col w-full ml-2">
+                <div className="flex justify-between">
                   <h2>{userObj?.name}</h2>
                   {getUnreadMessages(userObj)}
                 </div>
