@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { CreateNewChat } from "../../../apicalls/chats";
@@ -64,33 +65,75 @@ const UsersList = ({ searchKey }) => {
     return false;
   };
 
+  const getLastMessage = (userObj) => {
+    const chat = allChats.find((chat) =>
+      chat.members.map((member) => member._id).includes(userObj._id)
+    );
+    if (!chat || !chat.lastMessage) {
+      return "";
+    } else {
+      const lastMessagePerson =
+        chat?.lastMessage?.sender === user?._id ? "You: " : "";
+      return (
+        <div className="flex justify-between items-center w-full">
+          <h2 className="text-gray-600 text-sm mr-2">
+            {lastMessagePerson} {chat?.lastMessage?.text}
+          </h2>
+          <p className="text-gray-400 text-sm mt-[5px]">
+            {moment(chat?.lastMessage?.createdAt).format("hh:mm A")}
+          </p>
+        </div>
+      );
+    }
+  };
+
+  const getUnreadMessages = (userObj) => {
+    const chat = allChats.find((chat) =>
+      chat.members.map((member) => member._id).includes(userObj._id)
+    );
+
+    if (chat && chat.unreadMessages && chat.lastMessage.sender !== user._id) {
+      return (
+        <div className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 px-2 py-1 flex items-center justify-center">
+          <h3 className="font-semibold">{chat?.unreadMessages}</h3>
+        </div>
+      );
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-3 mt-5">
+    <div className="flex flex-col gap-3 mt-5 w-96">
       {getData().map((userObj) => {
         return (
           <div
             key={userObj._id}
-            className={`shadow-sm border p-3 rounded-2xl bg-white flex justify-between items-center cursor-pointer ${
+            className={`shadow-sm border p-3 rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full ${
               getIsSelectedChatOrNot(userObj) && "border-primary border-2"
             }`}
             onClick={() => openChat(userObj._id)}
           >
-            <div className="flex gap-5 items-center">
+            <div className="flex items-center w-full">
               {userObj?.profilePic && (
                 <img
                   src={userObj?.profilePic}
                   alt="User Profile"
-                  className="w-10 h-10 rounded-full"
+                  className="w-11 h-10 rounded-full mr-2"
                 />
               )}
               {!userObj?.profilePic && (
-                <div className="bg-gray-500 rounded-full w-10 h-10 flex items-center justify-center">
+                <div className="bg-gray-500 w-11 h-10 rounded-full flex items-center justify-center mr-2">
                   <h2 className="uppercase text-white text-2xl font-semibold">
                     {userObj?.name[0]}
                   </h2>
                 </div>
               )}
-              <h2>{userObj?.name}</h2>
+              <div className="flex flex-col gap-1 w-full">
+                <div className="flex gap-1 justify-between">
+                  <h2>{userObj?.name}</h2>
+                  {getUnreadMessages(userObj)}
+                </div>
+                {getLastMessage(userObj)}
+              </div>
             </div>
             <div>
               {!allChats.find((chat) =>

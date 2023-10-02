@@ -5,11 +5,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { SendMessage } from "../../../apicalls/messages";
 import { ShowLoader, HideLoader } from "../../../redux/loaderSlice";
 import { GetMessages } from "../../../apicalls/messages";
+import { ClearChatMessages } from "../../../apicalls/chats";
+import { setAllChats } from "../../../redux/userSlice";
 
 const ChatArea = () => {
   const dispatch = useDispatch();
   const [newMessage, setNewMessage] = useState("");
-  const { selectedChat, user } = useSelector((state) => state.userReducer);
+  const { selectedChat, user, allChats } = useSelector(
+    (state) => state.userReducer
+  );
   const [messages = [], setMessages] = useState([]);
   const receipentUser = selectedChat.members.find(
     (member) => member._id !== user._id
@@ -50,8 +54,35 @@ const ChatArea = () => {
     }
   }, [dispatch, selectedChat._id]);
 
+  const clearUnreadMessages = useCallback(async () => {
+    try {
+      dispatch(ShowLoader());
+      const response = await ClearChatMessages(selectedChat._id);
+      dispatch(HideLoader());
+
+      if (response.success) {
+        const updatedChats = allChats.map((chat) => {
+          if (chat._id === selectedChat._id) {
+            return response.data;
+          }
+
+          return chat;
+        });
+
+        dispatch(setAllChats(updatedChats));
+      }
+    } catch (error) {
+      dispatch(HideLoader());
+      toast.error(error.message);
+    }
+  }, [dispatch, allChats, selectedChat?._id]);
+
   useEffect(() => {
     getMessages();
+    if (selectedChat?.lastMessage?.sender !== user?._id) {
+      clearUnreadMessages();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getMessages]);
 
   return (
@@ -100,6 +131,13 @@ const ChatArea = () => {
                     {moment(message.createdAt).format("hh:mm A")}
                   </h2>
                 </div>
+                {isCurrentUserIsSender && (
+                  <i
+                    className={`fa-solid fa-check text-lg p-1 ${
+                      message.read ? "text-green-600" : "text-gray-400"
+                    }`}
+                  ></i>
+                )}
               </div>
             );
           })}
