@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import moment from "moment";
+import store from "../../../redux/store";
 import { useSelector, useDispatch } from "react-redux";
 import { SendMessage } from "../../../apicalls/messages";
 import { ShowLoader, HideLoader } from "../../../redux/loaderSlice";
@@ -21,20 +22,26 @@ const ChatArea = ({ socket }) => {
 
   const sendNewMessage = async () => {
     try {
-      dispatch(ShowLoader());
       const message = {
         chat: selectedChat._id,
         sender: user._id,
         text: newMessage,
       };
+      // send message to server usig socket
+      socket.emit("send-message", {
+        ...message,
+        members: selectedChat.members.map((member) => member._id),
+        createdAt: moment().format("DD-MM-YYYY hh:mm:ss"),
+        read: false,
+      });
+
+      // send message to server to store in db
       const response = await SendMessage(message);
-      dispatch(HideLoader());
 
       if (response.success) {
         setNewMessage("");
       }
     } catch (error) {
-      dispatch(HideLoader());
       toast.error(error.message);
     }
   };
@@ -82,8 +89,23 @@ const ChatArea = ({ socket }) => {
     if (selectedChat?.lastMessage?.sender !== user?._id) {
       clearUnreadMessages();
     }
+    // receive message from server using socket.io
+    socket.off("receive-message").on("receive-message", (message) => {
+      const tempSelectedChat = store.getState().userReducer.selectedChat;
+
+      if (tempSelectedChat._id === message.chat) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
+
+  useEffect(() => {
+    // always croll to bottom when sent a new message
+    const messagesContainer = document.getElementById("messages");
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }, [messages]);
 
   return (
     <div className="bg-white h-full border rounded-2xl w-full flex flex-col justify-between p-5">
@@ -108,14 +130,14 @@ const ChatArea = ({ socket }) => {
         <hr />
       </div>
       <div className="h-[67vh] flex items-center py-3">
-        <div className="h-full w-full overflow-y-scroll">
+        <div className="h-full w-full overflow-y-scroll" id="messages">
           <div className="flex flex-col gap-2">
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               const isCurrentUserIsSender = message.sender === user._id;
 
               return (
                 <div
-                  key={message._id}
+                  key={index}
                   className={`flex ${isCurrentUserIsSender && "justify-end"}`}
                 >
                   <div className="flex flex-col">

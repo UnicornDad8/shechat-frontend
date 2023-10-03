@@ -5,8 +5,9 @@ import UserSearch from "./components/UserSearch";
 import UsersList from "./components/UsersList";
 import { io } from "socket.io-client";
 
+const socket = io("http://localhost:5000");
+
 const Home = () => {
-  const socket = io("http://localhost:5000");
   const [searchKey, setSearchKey] = useState("");
   const { selectedChat, user } = useSelector((state) => state.userReducer);
 
@@ -14,18 +15,6 @@ const Home = () => {
     // join the room
     if (user) {
       socket.emit("join-room", user._id);
-
-      // send new message to receipent (John)
-      socket.emit("send-message", {
-        text: "Hi John, this is from Unicorn Dad",
-        sender: user._id,
-        receipent: "64c92256ed0284b606410e0c",
-      });
-
-      // received message from receipent (Unicorn)
-      socket.on("receive-message", (data) => {
-        console.log(data);
-      });
     }
   }, [user]);
 
