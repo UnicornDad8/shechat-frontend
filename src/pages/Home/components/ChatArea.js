@@ -59,10 +59,16 @@ const ChatArea = ({ socket }) => {
       dispatch(HideLoader());
       toast.error(error.message);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, selectedChat._id]);
 
   const clearUnreadMessages = useCallback(async () => {
     try {
+      socket.emit("clear-unread-messages", {
+        chat: selectedChat._id,
+        members: selectedChat.members.map((member) => member._id),
+      });
       dispatch(ShowLoader());
       const response = await ClearChatMessages(selectedChat._id);
       dispatch(HideLoader());
@@ -95,6 +101,44 @@ const ChatArea = ({ socket }) => {
 
       if (tempSelectedChat._id === message.chat) {
         setMessages((prev) => [...prev, message]);
+      }
+
+      if (
+        tempSelectedChat._id === message.chat &&
+        message.sender !== user._id
+      ) {
+        clearUnreadMessages();
+      }
+    });
+
+    // clear unread messages from socket.io
+    socket.on("unread-messages-cleared", (data) => {
+      const tempAllChats = store.getState().userReducer.allChats;
+      const tempSelectedChat = store.getState().userReducer.selectedChat;
+
+      if (data.chat === tempSelectedChat._id) {
+        const updatedChats = tempAllChats.map((chat) => {
+          if (chat._id === data.chat) {
+            return {
+              ...chat,
+              unreadMessages: 0,
+            };
+          }
+
+          return chat;
+        });
+
+        dispatch(setAllChats(updatedChats));
+
+        // set all messages as read
+        setMessages((prevMessages) => {
+          return prevMessages.map((message) => {
+            return {
+              ...message,
+              read: true,
+            };
+          });
+        });
       }
     });
 
