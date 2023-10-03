@@ -152,7 +152,7 @@ const UsersList = ({ searchKey }) => {
               ) && (
                 <button
                   onClick={() => createNewChat(userObj._id)}
-                  className="border border-primary text-primary bg-white px-3 py-1 rounded-md"
+                  className="border border-primary text-primary bg-white px-3 py-1 rounded-md mr-2"
                 >
                   Message
                 </button>
