@@ -8,7 +8,7 @@ import { GetMessages } from "../../../apicalls/messages";
 import { ClearChatMessages } from "../../../apicalls/chats";
 import { setAllChats } from "../../../redux/userSlice";
 
-const ChatArea = () => {
+const ChatArea = ({ socket }) => {
   const dispatch = useDispatch();
   const [newMessage, setNewMessage] = useState("");
   const { selectedChat, user, allChats } = useSelector(
