@@ -20,7 +20,7 @@ const Home = () => {
 
   return (
     <div className="flex gap-2">
-      <div className="w-96">
+      <div className="lg:w-96 xl:w-96 md:w-60 sm:w-60">
         <UserSearch searchKey={searchKey} setSearchKey={setSearchKey} />
         <UsersList searchKey={searchKey} socket={socket} />
       </div>

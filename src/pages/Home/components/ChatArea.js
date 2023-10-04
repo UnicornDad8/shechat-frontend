@@ -11,6 +11,7 @@ import { setAllChats } from "../../../redux/userSlice";
 
 const ChatArea = ({ socket }) => {
   const dispatch = useDispatch();
+  const [isReceipentTyping, setIsReceipentTyping] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const { selectedChat, user, allChats } = useSelector(
     (state) => state.userReducer
@@ -69,9 +70,7 @@ const ChatArea = ({ socket }) => {
         chat: selectedChat._id,
         members: selectedChat.members.map((member) => member._id),
       });
-      dispatch(ShowLoader());
       const response = await ClearChatMessages(selectedChat._id);
-      dispatch(HideLoader());
 
       if (response.success) {
         const updatedChats = allChats.map((chat) => {
@@ -85,7 +84,6 @@ const ChatArea = ({ socket }) => {
         dispatch(setAllChats(updatedChats));
       }
     } catch (error) {
-      dispatch(HideLoader());
       toast.error(error.message);
     }
   }, [dispatch, allChats, selectedChat?._id]);
@@ -142,13 +140,31 @@ const ChatArea = ({ socket }) => {
       }
     });
 
+    // receipent typing
+    socket.on("started-typing", (data) => {
+      const selectedChat = store.getState().userReducer.selectedChat;
+
+      if (data.chat === selectedChat._id && data.sender !== user._id) {
+        setIsReceipentTyping(true);
+        scrollDown();
+      }
+
+      setTimeout(() => {
+        setIsReceipentTyping(false);
+      }, 3500);
+    });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
 
-  useEffect(() => {
-    // always croll to bottom when sent a new message
+  const scrollDown = () => {
     const messagesContainer = document.getElementById("messages");
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  };
+
+  useEffect(() => {
+    // always croll to bottom when sent a new message
+    scrollDown();
   }, [messages]);
 
   return (
@@ -208,6 +224,13 @@ const ChatArea = ({ socket }) => {
                 </div>
               );
             })}
+            {isReceipentTyping && (
+              <h2 className="bg-gray-300 opacity-75 text-white px-2 py-5 rounded-xl w-[80px] flex items-center justify-center">
+                <div class="stage">
+                  <div class="dot-pulse"></div>
+                </div>
+              </h2>
+            )}
           </div>
         </div>
       </div>
@@ -218,7 +241,14 @@ const ChatArea = ({ socket }) => {
             placeholder="type a message"
             className="w-[90%] border-0 h-full rounded-[6px] focus:outline-none"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              socket.emit("typing", {
+                chat: selectedChat._id,
+                members: selectedChat.members.map((member) => member._id),
+                sender: user._id,
+              });
+            }}
           />
           <button
             onClick={sendNewMessage}
