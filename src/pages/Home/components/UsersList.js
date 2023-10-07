@@ -7,7 +7,7 @@ import { CreateNewChat } from "../../../apicalls/chats";
 import { setAllChats, setSelectedChat } from "../../../redux/userSlice";
 import { ShowLoader, HideLoader } from "../../../redux/loaderSlice";
 
-const UsersList = ({ searchKey, socket }) => {
+const UsersList = ({ searchKey, socket, onlineUsers }) => {
   const { allUsers, allChats, user, selectedChat } = useSelector(
     (state) => state.userReducer
   );
@@ -147,7 +147,7 @@ const UsersList = ({ searchKey, socket }) => {
             onClick={() => openChat(userObj._id)}
           >
             <div className="flex justify-center items-center w-full m-2">
-              <div className="w-14 h-12 bg-white flex items-center justify-center">
+              <div className="w-14 h-12 bg-white flex items-center justify-center relative">
                 {userObj?.profilePic && (
                   <img
                     src={userObj?.profilePic}
@@ -156,10 +156,15 @@ const UsersList = ({ searchKey, socket }) => {
                   />
                 )}
                 {!userObj?.profilePic && (
-                  <div className="bg-gray-500 w-full h-full object-cover rounded-full flex items-center justify-center">
+                  <div className="bg-gray-400 w-full h-full object-cover rounded-full flex items-center justify-center">
                     <h2 className="uppercase text-white text-2xl font-semibold">
                       {userObj?.name[0]}
                     </h2>
+                    {onlineUsers.includes(userObj._id) && (
+                      <div>
+                        <div className="bg-green-300 w-3 h-3 rounded-full absolute bottom-[1px] right-1"></div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

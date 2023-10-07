@@ -10,11 +10,17 @@ const socket = io("http://localhost:5000");
 const Home = () => {
   const [searchKey, setSearchKey] = useState("");
   const { selectedChat, user } = useSelector((state) => state.userReducer);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
     // join the room
     if (user) {
       socket.emit("join-room", user._id);
+      socket.emit("came-online", user._id);
+
+      socket.on("online-users", (users) => {
+        setOnlineUsers(users);
+      });
     }
   }, [user]);
 
@@ -22,7 +28,11 @@ const Home = () => {
     <div className="flex gap-2">
       <div className="lg:w-96 xl:w-96 md:w-60 sm:w-60">
         <UserSearch searchKey={searchKey} setSearchKey={setSearchKey} />
-        <UsersList searchKey={searchKey} socket={socket} />
+        <UsersList
+          searchKey={searchKey}
+          socket={socket}
+          onlineUsers={onlineUsers}
+        />
       </div>
       <div className="w-full flex items-center justify-center">
         {selectedChat && <ChatArea socket={socket} />}
