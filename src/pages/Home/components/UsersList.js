@@ -66,6 +66,24 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
     return false;
   };
 
+  const getDateInRegularFormat = (date) => {
+    let result = "";
+    // if date is today return time
+    if (moment(date).isSame(moment(), "day")) {
+      result = moment(date).format("hh:mm");
+    }
+    // if date is yesterday return yesterday and time
+    else if (moment(date).isSame(moment().subtract(1, "day"), "day")) {
+      result = `Yesterday ${moment(date).format("hh:mm")}`;
+    }
+    // if date is this year return date and time
+    else if (moment(date).isSame(moment(), "year")) {
+      result = moment(date).format("MMM DD hh:mm");
+    }
+
+    return result;
+  };
+
   const getLastMessage = (userObj) => {
     const chat = allChats.find((chat) =>
       chat.members.map((member) => member._id).includes(userObj._id)
@@ -81,7 +99,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
             {lastMessagePerson} {chat?.lastMessage?.text}
           </h2>
           <p className="text-gray-400 text-sm mt-[5px]">
-            {moment(chat?.lastMessage?.createdAt).format("hh:mm A")}
+            {getDateInRegularFormat(chat?.lastMessage?.createdAt)}
           </p>
         </div>
       );
@@ -107,7 +125,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
       // if the oppened chat area is not equal to chat in message, then
       // increase unread messages by 1 and update last message
       const tempSelectedChat = store.getState().userReducer.selectedChat;
-      const tempAllChats = store.getState().userReducer.allChats;
+      let tempAllChats = store.getState().userReducer.allChats;
 
       if (tempSelectedChat?._id !== message.chat) {
         const updatedAllChats = tempAllChats.map((chat) => {
@@ -122,9 +140,23 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
           return chat;
         });
 
-        dispatch(setAllChats(updatedAllChats));
+        tempAllChats = updatedAllChats;
       }
+
+      // always latest message chat will be on the top
+      const latestChat = tempAllChats.find(
+        (chat) => chat?._id === message?.chat
+      );
+      const otherChats = tempAllChats.filter(
+        (chat) => chat?._id !== message?.chat
+      );
+
+      tempAllChats = [latestChat, ...otherChats];
+
+      dispatch(setAllChats(tempAllChats));
     });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -132,19 +164,19 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
       {getData().map((chatObjOrUserObj) => {
         let userObj = chatObjOrUserObj;
 
-        if (chatObjOrUserObj.members) {
-          userObj = chatObjOrUserObj.members.find(
-            (member) => member._id !== user._id
+        if (chatObjOrUserObj?.members) {
+          userObj = chatObjOrUserObj?.members.find(
+            (member) => member?._id !== user?._id
           );
         }
 
         return (
           <div
-            key={userObj._id}
+            key={userObj?._id}
             className={`shadow-sm border rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full ${
               getIsSelectedChatOrNot(userObj) && "border-primary border-2"
             }`}
-            onClick={() => openChat(userObj._id)}
+            onClick={() => openChat(userObj?._id)}
           >
             <div className="flex justify-center items-center w-full m-2">
               <div className="w-14 h-12 bg-white flex items-center justify-center relative">
@@ -160,7 +192,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
                     <h2 className="uppercase text-white text-2xl font-semibold">
                       {userObj?.name[0]}
                     </h2>
-                    {onlineUsers.includes(userObj._id) && (
+                    {onlineUsers.includes(userObj?._id) && (
                       <div>
                         <div className="bg-green-300 w-3 h-3 rounded-full absolute bottom-[1px] right-1"></div>
                       </div>
@@ -179,10 +211,10 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
             </div>
             <div>
               {!allChats.find((chat) =>
-                chat.members.map((member) => member._id).includes(userObj._id)
+                chat.members.map((member) => member?._id).includes(userObj?._id)
               ) && (
                 <button
-                  onClick={() => createNewChat(userObj._id)}
+                  onClick={() => createNewChat(userObj?._id)}
                   className="border border-primary text-primary bg-white px-3 py-1 rounded-md mr-2"
                 >
                   Message

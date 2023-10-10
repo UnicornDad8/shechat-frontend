@@ -86,7 +86,27 @@ const ChatArea = ({ socket }) => {
     } catch (error) {
       toast.error(error.message);
     }
-  }, [dispatch, allChats, selectedChat?._id]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getDateInRegularFormat = (date) => {
+    let result = "";
+    // if date is today return time
+    if (moment(date).isSame(moment(), "day")) {
+      result = moment(date).format("hh:mm");
+    }
+    // if date is yesterday return yesterday and time
+    else if (moment(date).isSame(moment().subtract(1, "day"), "day")) {
+      result = `Yesterday ${moment(date).format("hh:mm")}`;
+    }
+    // if date is this year return date and time
+    else if (moment(date).isSame(moment(), "year")) {
+      result = moment(date).format("MMM DD hh:mm");
+    }
+
+    return result;
+  };
 
   useEffect(() => {
     getMessages();
@@ -211,7 +231,7 @@ const ChatArea = ({ socket }) => {
                       {message.text}
                     </h2>
                     <h2 className="mt-1 mb-4 ml-[3px] text-gray-500 text-sm">
-                      {moment(message.createdAt).format("hh:mm A")}
+                      {getDateInRegularFormat(message?.createdAt)}
                     </h2>
                   </div>
                   {isCurrentUserIsSender && (
