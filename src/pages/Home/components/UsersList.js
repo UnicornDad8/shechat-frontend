@@ -122,8 +122,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
 
   useEffect(() => {
     socket.on("receive-message", (message) => {
-      // if the oppened chat area is not equal to chat in message, then
-      // increase unread messages by 1 and update last message
+      // if the chat area opened is not equal to chat in message, then increase unread messages by 1 and update last message
       const tempSelectedChat = store.getState().userReducer.selectedChat;
       let tempAllChats = store.getState().userReducer.allChats;
 
@@ -134,6 +133,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
               ...chat,
               unreadMessages: (chat?.unreadMessages || 0) + 1,
               lastMessage: message,
+              updatedAt: message.createdAt,
             };
           }
 
@@ -143,16 +143,14 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
         tempAllChats = updatedAllChats;
       }
 
-      // always latest message chat will be on the top
-      const latestChat = tempAllChats.find(
-        (chat) => chat?._id === message?.chat
-      );
+      // always latest message chat will be on top
+      const latestChat = tempAllChats.find((chat) => chat._id === message.chat);
       const otherChats = tempAllChats.filter(
-        (chat) => chat?._id !== message?.chat
+        (chat) => chat._id !== message.chat
       );
 
       tempAllChats = [latestChat, ...otherChats];
-
+      console.log(tempAllChats);
       dispatch(setAllChats(tempAllChats));
     });
 
@@ -173,12 +171,12 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
         return (
           <div
             key={userObj?._id}
-            className={`shadow-sm border rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full ${
+            className={`shadow-sm border rounded-2xl bg-white flex justify-between items-center cursor-pointer w-full p-3 ${
               getIsSelectedChatOrNot(userObj) && "border-primary border-2"
             }`}
             onClick={() => openChat(userObj?._id)}
           >
-            <div className="flex justify-center items-center w-full m-2">
+            <div className="flex justify-center items-center w-full">
               <div className="w-14 h-12 bg-white flex items-center justify-center relative">
                 {userObj?.profilePic && (
                   <img
@@ -188,7 +186,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
                   />
                 )}
                 {!userObj?.profilePic && (
-                  <div className="bg-gray-400 w-full h-full object-cover rounded-full flex items-center justify-center">
+                  <div className="bg-gray-400 w-12 h-full object-cover rounded-full flex items-center justify-center">
                     <h2 className="uppercase text-white text-2xl font-semibold">
                       {userObj?.name[0]}
                     </h2>
@@ -215,7 +213,7 @@ const UsersList = ({ searchKey, socket, onlineUsers }) => {
               ) && (
                 <button
                   onClick={() => createNewChat(userObj?._id)}
-                  className="border border-primary text-primary bg-white px-3 py-1 rounded-md mr-2"
+                  className="border border-primary text-primary bg-white px-3 py-1 rounded-md"
                 >
                   Message
                 </button>
